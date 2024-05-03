@@ -153,3 +153,10 @@ def get_main_tiers(request):
     unique_main_tiers = Sponsors.objects.values_list('main_tier', flat=False).distinct()
 
     return JsonResponse(paginate_results_list(request, unique_main_tiers, view_url), safe=False)
+
+def get_sub_tiers(request):
+    view_url = request.build_absolute_uri()
+
+    unique_sub_tiers = Sponsors.objects.values_list('sub_tier', flat=False).distinct()
+
+    return JsonResponse(paginate_results_list(request, unique_sub_tiers, view_url), safe=False)
