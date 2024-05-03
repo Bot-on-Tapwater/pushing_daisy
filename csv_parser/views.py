@@ -147,3 +147,9 @@ def get_industries(request):
 
     return JsonResponse(paginate_results_list(request, unique_industries, view_url), safe=False)
 
+def get_main_tiers(request):
+    view_url = request.build_absolute_uri()
+
+    unique_main_tiers = Sponsors.objects.values_list('main_tier', flat=False).distinct()
+
+    return JsonResponse(paginate_results_list(request, unique_main_tiers, view_url), safe=False)
