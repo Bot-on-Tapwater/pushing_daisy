@@ -51,7 +51,7 @@ def index(request):
 
 
 """PAGINATION"""
-def paginate_results(request, query_results, view_url, items_per_page=100):
+def paginate_results_objects(request, query_results, view_url, items_per_page=100):
     items_per_page = items_per_page
 
     page_number = request.GET.get('page', 1)
@@ -86,12 +86,64 @@ def paginate_results(request, query_results, view_url, items_per_page=100):
     
     return json_data
 
+def paginate_results_list(request, query_results, view_url, items_per_page=100):
+    items_per_page = items_per_page
+
+    page_number = request.GET.get('page', 1)
+
+    paginator = Paginator(query_results, items_per_page)
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    
+    except EmptyPage:
+        return JsonResponse({"error": "Page not found"}, status=404)
+    
+    items_on_current_page = page_obj.object_list
+
+    json_data = {
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+        'query_results': [item for item in items_on_current_page],
+    }
+    
+    if page_obj.has_previous():
+        if "page=" in view_url:
+            json_data['previous_page'] = f"{view_url[:view_url.rfind('page=')]}page={page_obj.previous_page_number()}"
+        else:
+            json_data['previous_page'] = f"{view_url}?page={page_obj.previous_page_number()}"
+
+    if page_obj.has_next():
+        if "page=" in view_url:
+            json_data['next_page'] = f"{view_url[:view_url.rfind('page=')]}page={page_obj.next_page_number()}"
+        else:
+            json_data['next_page'] = f"{view_url}?page={page_obj.next_page_number()}"
+    
+    return json_data
+
 """QUERIES"""
 
 def get_all_records(request):
     view_url = request.build_absolute_uri()
+
     all_records = Sponsors.objects.all()
 
     # return JsonResponse([record.to_dict() for record in all_records], safe=False)
-    return JsonResponse(paginate_results(request, all_records, view_url), safe=False)
+    return JsonResponse(paginate_results_objects(request, all_records, view_url), safe=False)
+
+def get_towns(request):
+    view_url = request.build_absolute_uri()
+
+    unique_towns = Sponsors.objects.values_list('town', flat=False).distinct()
+
+    # return JsonResponse({'towns': list(unique_towns)})
+
+    return JsonResponse(paginate_results_list(request, unique_towns, view_url), safe=False)
+
+def get_industries(request):
+    view_url = request.build_absolute_uri()
+
+    unique_industries = Sponsors.objects.values_list('industry', flat=False).distinct()
+
+    return JsonResponse(paginate_results_list(request, unique_industries, view_url), safe=False)
 
