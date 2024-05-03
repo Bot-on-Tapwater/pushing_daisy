@@ -8,4 +8,5 @@ urlpatterns = [
     path("all", views.get_all_records),
     path("towns", views.get_towns),
     path("industries", views.get_industries),
+    path("main_tiers", views.get_main_tiers),
 ]
