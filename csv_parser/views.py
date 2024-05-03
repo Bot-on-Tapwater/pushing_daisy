@@ -105,7 +105,7 @@ def paginate_results_list(request, query_results, view_url, items_per_page=100):
     json_data = {
         'current_page': page_obj.number,
         'total_pages': paginator.num_pages,
-        'query_results': [(item[0], f"http://127.0.0.1:8000/csv_parser/search?q={item[0]}") for item in items_on_current_page],
+        'query_results': [(item[0], f"https://daisy.botontapwater.tech/csv_parser/search?q={item[0]}") for item in items_on_current_page],
     }
     
     if page_obj.has_previous():
