@@ -26,6 +26,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage
 from django.core.serializers import serialize
 from django.forms.models import model_to_dict
+from django.db.models import Q
 
 """HELPER FUNCTIONS"""
 def parse_csv(request):
@@ -104,7 +105,7 @@ def paginate_results_list(request, query_results, view_url, items_per_page=100):
     json_data = {
         'current_page': page_obj.number,
         'total_pages': paginator.num_pages,
-        'query_results': [item for item in items_on_current_page],
+        'query_results': [(item[0], f"http://127.0.0.1:8000/csv_parser/search?q={item[0]}") for item in items_on_current_page],
     }
     
     if page_obj.has_previous():
@@ -160,3 +161,23 @@ def get_sub_tiers(request):
     unique_sub_tiers = Sponsors.objects.values_list('sub_tier', flat=False).distinct()
 
     return JsonResponse(paginate_results_list(request, unique_sub_tiers, view_url), safe=False)
+
+"""SEARCH"""
+def search_field(request):
+    view_url = request.build_absolute_uri()
+
+    query = request.GET.get('q')
+
+    if query:
+        search_results = Sponsors.objects.filter(
+            Q(organisation_name__icontains=query) |
+            Q(town__icontains=query) |
+            Q(industry__icontains=query) |
+            Q(main_tier__icontains=query) |
+            Q(sub_tier__icontains=query)
+        )
+    
+    else:
+        search_results = None
+    
+    return JsonResponse(paginate_results_objects(request, search_results, view_url), safe=False)
